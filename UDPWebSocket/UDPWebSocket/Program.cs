@@ -12,7 +12,7 @@ namespace UDPWebSocket
         private static int _remotePort;
         private static Socket _listeningSocket;
         
-        static void Main(string[] args)
+        static void Main()
         {
             Console.Write("Введите порт для приема сообщений: ");
             _localPort = int.Parse(Console.ReadLine());
@@ -33,7 +33,7 @@ namespace UDPWebSocket
                 {
                     string message = Console.ReadLine();
 
-                    byte[] data = Encoding.Unicode.GetBytes(message);
+                    byte[] data = Encoding.Unicode.GetBytes(message ?? "");
                     EndPoint remotePoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), _remotePort);
                     _listeningSocket.SendTo(data, remotePoint);
                 }
@@ -58,20 +58,18 @@ namespace UDPWebSocket
                 while (true)
                 {
                     StringBuilder builder = new StringBuilder();
-                    int bytes = 0;
                     byte[] buffer = new byte[256];
                 
                     EndPoint remoteIp = new IPEndPoint(IPAddress.Any, 0);
 
                     do
                     {
-                        bytes = _listeningSocket.ReceiveFrom(buffer, ref remoteIp);
+                        int bytes = _listeningSocket.ReceiveFrom(buffer, ref remoteIp);
                         builder.Append(Encoding.Unicode.GetString(buffer, 0, bytes));
                     } while (_listeningSocket.Available > 0);
-                    
-                    IPEndPoint remoteFullIp = remoteIp as IPEndPoint;
-                    
-                    Console.WriteLine("{0}:{1} - {2}", remoteFullIp.Address, remoteFullIp.Port, builder);
+
+                    if (remoteIp is IPEndPoint remoteFullIp)
+                        Console.WriteLine("{0}:{1} - {2}", remoteFullIp.Address, remoteFullIp.Port, builder);
                 }
             }
             catch(Exception ex)
